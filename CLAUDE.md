@@ -98,6 +98,22 @@ Logging uses `loguru` throughout, configured in `config.py` to write via `tqdm.w
 
 The genre taxonomy in `dataset.py` maps two groups (`"alternative"`, `"comercial"`) to Spotify genre search terms. The Spotify client uses Client Credentials flow (no user auth).
 
+## Known blockers
+
+### Spotify audio features — 403 Forbidden (as of May 2025)
+
+`spotify.audio_features()` returns 403 for apps registered by individuals. Spotify deprecated this endpoint for non-organizational accounts in May 2025. Extended quota access now requires a legally registered business with 250k+ MAUs.
+
+**Impact:** `valence`, `energy`, `acousticness`, and `danceability` — the core metrics for this project — are unavailable via the Spotify API.
+
+**`get_audio_features()` in `dataset.py` is implemented and correct**, but blocked at the API level.
+
+**Candidate alternatives under evaluation:**
+- **Million Song Dataset** — pre-calculated audio features, free download, tracks up to 2011
+- **FMA (Free Music Archive)** — librosa-calculated features, free, independent music only
+- **AcousticBrainz** — deprecated but data still downloadable
+- **librosa** — calculate features from raw audio (complex, requires audio source)
+
 ## Linter / formatter
 
 `ruff` with line length 99, import sorting enabled (`extend-select = ["I"]`). Run `make format` before committing.
