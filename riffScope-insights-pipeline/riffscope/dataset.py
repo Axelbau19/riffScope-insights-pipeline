@@ -7,6 +7,7 @@ import spotipy
 import os
 import time
 import requests
+import pandas as pd
 
 
 from riffscope.config import PROCESSED_DATA_DIR, RAW_DATA_DIR
@@ -18,10 +19,17 @@ spotify= spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 ))
 #genres
 genres = {
-    "alternative": ["rock","punk","metal","alternative","indie","hard-rock"],
+    "alternative": ["rock","punk","metal","alternative","indie","hard-rock","grunge","garage-rock","shoegaze"],
     "comercial": ["pop","latin-pop","reggaeton","dance","trap","k-pop","hip-hop","corridos-tumbados","regional-mexican"]
 
 }
+
+def save_data_csv(merge):
+    for group,tracks in merge.items():
+        df = pd.DataFrame(tracks)
+        df["group"]=group
+        df.to_csv(RAW_DATA_DIR / f"{group}.csv",index=False)
+        logger.info(f"{group}:{len(df)} tracks")
 
 #Trick
 def chunk(lst,size=100):
@@ -80,7 +88,7 @@ def fetch_track_for_genres(genre,limit,pages):
             if not items:
                 break
             tracks.extend(items)
-            time.sleep(0.5)
+            time.sleep(1)
         except Exception as e:
             logger.error(f"{e}")
             break
@@ -107,11 +115,10 @@ app = typer.Typer()
 @app.command()
 def main():
     #10-50
-    data=search_track(genres=genres,limit=2,pages=2)
+    data=search_track(genres=genres,limit=10,pages=20)
     features=get_audio_features(data)
     merge=merge_tracks(data,features)
-    for group, tracks in merge.items():
-        logger.info(f"{group}:{len(tracks)}")
+    save_data_csv(merge)
 
 
 
