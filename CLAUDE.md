@@ -14,23 +14,28 @@ The goal is to explore how the human, imperfect, and emotionally complex could b
 
 | Group | Genres |
 |---|---|
-| `alternative` | rock, punk, metal, alternative, indie, hard rock |
-| `comercial` | pop, latin pop, reggaeton, dance |
+| `alternative` | rock, punk, metal, alternative, indie, hard-rock |
+| `comercial` | pop, latin-pop, reggaeton, dance, trap, k-pop, hip-hop, corridos-tumbados, regional-mexican |
 
 Target: **500–1000 tracks per genre** for analysis.
 
-## Key metrics (Spotify audio features)
+## Key metrics (dataset fields)
 
-| Field | Description |
-|---|---|
-| `valence` | Emotional attitude of the song (positive vs. negative) |
-| `energy` | Intensity |
-| `acousticness` | Acoustic vs. produced sound |
-| `danceability` | How suitable for dancing |
-| `popularity` | Spotify popularity score |
-| `release_date_precision` | Release time granularity |
-| `name` | Track name |
-| `id` | Spotify track ID |
+Audio features come from **ReccoBeats API** (not Spotify — see Known Blockers).
+
+| Field | Source | Description |
+|---|---|---|
+| `id` | Spotify | Track ID |
+| `name` | Spotify | Track name |
+| `artists` | Spotify | Artist name(s), comma-separated |
+| `release_date` | Spotify | Release date |
+| `valence` | ReccoBeats | Emotional attitude (positive vs. negative) |
+| `energy` | ReccoBeats | Intensity |
+| `acousticness` | ReccoBeats | Acoustic vs. produced sound |
+| `danceability` | ReccoBeats | How suitable for dancing |
+
+**Omitted fields:**
+- `popularity` — not returned by Spotify search with Client Credentials flow; individual endpoint exists but was excluded to simplify the pipeline
 
 ## Tech stack
 
@@ -98,21 +103,19 @@ Logging uses `loguru` throughout, configured in `config.py` to write via `tqdm.w
 
 The genre taxonomy in `dataset.py` maps two groups (`"alternative"`, `"comercial"`) to Spotify genre search terms. The Spotify client uses Client Credentials flow (no user auth).
 
-## Known blockers
+## Known blockers and decisions
 
-### Spotify audio features — 403 Forbidden (as of May 2025)
+### Spotify audio features — 403 Forbidden (resolved)
 
-`spotify.audio_features()` returns 403 for apps registered by individuals. Spotify deprecated this endpoint for non-organizational accounts in May 2025. Extended quota access now requires a legally registered business with 250k+ MAUs.
+`spotify.audio_features()` returns 403 for apps registered by individuals. Spotify deprecated this endpoint for non-organizational accounts in May 2025.
 
-**Impact:** `valence`, `energy`, `acousticness`, and `danceability` — the core metrics for this project — are unavailable via the Spotify API.
+**Resolution:** Replaced with **ReccoBeats API** (`GET https://api.reccobeats.com/v1/audio-features?ids=...`). Free, accepts Spotify IDs in batches of up to 100, returns `valence`, `energy`, `acousticness`, `danceability`, and more. Rate limit handled via `Retry-After` header on 429 responses.
 
-**`get_audio_features()` in `dataset.py` is implemented and correct**, but blocked at the API level.
+**Caveat:** ReccoBeats does not cover 100% of Spotify tracks (~70% coverage estimated). Tracks without features are silently dropped during merge. Compensate by requesting more tracks from Spotify.
 
-**Candidate alternatives under evaluation:**
-- **Million Song Dataset** — pre-calculated audio features, free download, tracks up to 2011
-- **FMA (Free Music Archive)** — librosa-calculated features, free, independent music only
-- **AcousticBrainz** — deprecated but data still downloadable
-- **librosa** — calculate features from raw audio (complex, requires audio source)
+### `popularity` field — omitted
+
+Spotify's search endpoint with Client Credentials flow does not return `popularity`. The individual track endpoint (`spotify.track(id)`) does, but requires 1 request per track. Batch endpoint (`spotify.tracks(ids)`) accepts 50 IDs. Decision: omitted from the dataset to keep the pipeline simple.
 
 ## Linter / formatter
 

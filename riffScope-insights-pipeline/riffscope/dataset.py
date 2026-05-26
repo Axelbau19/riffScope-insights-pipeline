@@ -19,7 +19,7 @@ spotify= spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 #genres
 genres = {
     "alternative": ["rock","punk","metal","alternative","indie","hard-rock"],
-    "comercial": ["pop","latin-pop","reggaeton","dance"]
+    "comercial": ["pop","latin-pop","reggaeton","dance","trap","k-pop","hip-hop","corridos-tumbados","regional-mexican"]
 
 }
 
@@ -28,7 +28,7 @@ def chunk(lst,size=100):
     for index in range(0,len(lst),size):
         yield lst[index:index+size]
 
-
+    
 def get_audio_features(data_tracks):
     all_track_features = {}
     for group,tracks in data_tracks.items():
@@ -49,6 +49,26 @@ def get_audio_features(data_tracks):
                 logger.error(f"Fallo {e}")
                 break
     return all_track_features
+
+def merge_tracks(data_tracks,all_track_features):
+    merged = {}
+    for group, tracks in data_tracks.items():
+        features_by_spotify = { feature["href"].split("/")[-1]: feature for feature in all_track_features[group] }
+        for track in tracks:
+            spotify_id = track["id"]
+            if spotify_id in features_by_spotify:
+                feature=features_by_spotify[spotify_id]
+                merged.setdefault(group, []).append({              
+                "id": spotify_id,
+                "name": track["name"],
+                "artists":", ".join([a["name"] for a in track["artists"]]),
+                "release_date": track["album"]["release_date"],
+                "acousticness": feature["acousticness"],
+                "danceability": feature["danceability"],
+                "energy": feature["energy"],
+                "valence": feature["valence"],
+                })
+    return merged
 
 def fetch_track_for_genres(genre,limit,pages):
     tracks = []
@@ -73,10 +93,12 @@ def search_track(genres,limit,pages):
     for group, genre_list in genres.items():
             group_tracks = []
             for genre in genre_list:
-                tracks=fetch_track_for_genres(genre,limit,pages)
-                group_tracks.extend(tracks)
-            data_tracks[group] = group_tracks
+                group_tracks.extend(fetch_track_for_genres(genre,limit,pages))
+            data_tracks[group] = list({ t["id"]: t for t in group_tracks }.values())
     return data_tracks
+
+
+
 
 
 
@@ -85,10 +107,11 @@ app = typer.Typer()
 @app.command()
 def main():
     #10-50
-    data=search_track(genres=genres,limit=1,pages=1)
+    data=search_track(genres=genres,limit=2,pages=2)
     features=get_audio_features(data)
-    for group, f in features.items():
-        logger.info(f"{group}:{f}")
+    merge=merge_tracks(data,features)
+    for group, tracks in merge.items():
+        logger.info(f"{group}:{len(tracks)}")
 
 
 
