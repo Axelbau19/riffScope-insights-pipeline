@@ -1,29 +1,26 @@
-from pathlib import Path
+
 
 from loguru import logger
-from tqdm import tqdm
-import typer
 
-from riffscope.config import PROCESSED_DATA_DIR
+import typer
+import pandas as pd
+
+
+from riffscope.config import RAW_DATA_DIR,PROCESSED_DATA_DIR
 
 app = typer.Typer()
 
 
+def merge_df(alternative_df,comercial_df):
+    csv_merged  = pd.concat([alternative_df,comercial_df],ignore_index=True)
+    return csv_merged
+
+def read_csv():
+    alternative=pd.read_csv(RAW_DATA_DIR/"alternative.csv")
+    comercial=pd.read_csv(RAW_DATA_DIR/"comercial.csv")
+    return alternative,comercial
 @app.command()
-def main(
-    # ---- REPLACE DEFAULT PATHS AS APPROPRIATE ----
-    input_path: Path = PROCESSED_DATA_DIR / "dataset.csv",
-    output_path: Path = PROCESSED_DATA_DIR / "features.csv",
-    # -----------------------------------------
-):
-    # ---- REPLACE THIS WITH YOUR OWN CODE ----
-    logger.info("Generating features from dataset...")
-    for i in tqdm(range(10), total=10):
-        if i == 5:
-            logger.info("Something happened for iteration 5.")
-    logger.success("Features generation complete.")
-    # -----------------------------------------
-
-
+def main():
+    return 0
 if __name__ == "__main__":
     app()
