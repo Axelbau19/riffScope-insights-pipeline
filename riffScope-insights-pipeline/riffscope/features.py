@@ -19,8 +19,26 @@ def read_csv():
     alternative=pd.read_csv(RAW_DATA_DIR/"alternative.csv")
     comercial=pd.read_csv(RAW_DATA_DIR/"comercial.csv")
     return alternative,comercial
+
+def clean_data(df):
+    df = df.sort_values("group",ascending=True)
+    df= df.drop_duplicates(subset=['id'],keep="first")
+    df= df.drop_duplicates(subset=["name","artists"],keep="first")
+    df["release_date"] = pd.to_datetime(df["release_date"],format="mixed")
+    df["release_year"] = df["release_date"].dt.year
+    df = df.drop(columns=["release_date"])
+    df=df.reset_index(drop=True)
+    return df
+
+def save_data(df):
+    df.to_csv(PROCESSED_DATA_DIR/"dataset_clean.csv",index=False)
+
 @app.command()
 def main():
-    return 0
+    alternative,comercial = read_csv()
+    df = merge_df(alternative,comercial)
+    df=clean_data(df)
+    save_data(df)
+    
 if __name__ == "__main__":
     app()
