@@ -1,24 +1,13 @@
 # RiffScope Insights Pipeline
 
-<a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
+<a target="_blank">
     <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
-</a>
-
-<a target="_blank">
     <img src="https://img.shields.io/badge/Spotify-API-1DB954?logo=spotify&logoColor=white" />
-</a>
-
-<a target="_blank">
     <img src="https://img.shields.io/badge/Power%20BI-Dashboard-F2C811?logo=powerbi&logoColor=black" />
-</a>
-
-<a target="_blank">
     <img src="https://img.shields.io/badge/Power%20BI-Dashboard-F2C811?logo=powerbi&logoColor=black" />
-</a>
-
-<a target="_blank">
     <img src="https://img.shields.io/badge/Azure-Blob%20Storage-0078D4?logo=microsoftazure&logoColor=white" />
 </a>
+
 
 
 
